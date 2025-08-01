@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda Ativa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <style>::-webkit-scrollbar { display: none;}</style>
+    <script>
+        tailwind.config = {
+            "theme": {
+                "extend": {
+                    "colors": {
+                        "primary": "#2563EB",
+                        "secondary": "#14B8A6",
+                        "highlight": "#F97316",
+                        "error": "#DC2626",
+                        "border": "#E5E7EB"
+                    },
+                    "fontFamily": {
+                        "sans": [
+                            "Inter",
+                            "sans-serif"
+                        ]
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;500;600;700;800;900&display=swap">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif !important;
+        }
+        
+        .fa, .fas, .far, .fal, .fab {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
+        }
+        
+        .highlighted-section {
+            outline: 2px solid #3F20FB;
+            background-color: rgba(63, 32, 251, 0.1);
+        }
+
+        .edit-button {
+            position: absolute;
+            z-index: 1000;
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        html, body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .rotate {
+            animation: rotation 2s infinite linear;
+        }
+
+        @keyframes rotation {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(359deg);
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-800 bg-gray-50 font-sans">
+    <!-- Header -->
+    <header id="header" class="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
+        <div class="px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <h1 class="text-lg font-medium text-primary">Agenda Ativa</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="p-2 rounded-full hover:bg-gray-100">
+                    <i class="fa-regular fa-bell text-gray-600"></i>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg" alt="Avatar" class="w-full h-full object-cover">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Bottom Navigation -->
+    <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+        <div class="flex justify-around">
+            <span class="flex flex-col items-center py-2 px-3 text-primary cursor-pointer" onclick="filterPatients('all')">
+                <i class="fa-solid fa-user-group text-lg"></i>
+                <span class="text-xs mt-1">Pacientes</span>
+            </span>
+            <span class="flex flex-col items-center py-2 px-3 text-gray-500 cursor-pointer" onclick="filterPatients('authorized')">
+                <i class="fa-solid fa-clipboard-check text-lg"></i>
+                <span class="text-xs mt-1">Autorizações</span>
+            </span>
+            <span class="flex flex-col items-center py-2 px-3 text-gray-500 cursor-pointer" onclick="filterPatients('scheduled')">
+                <i class="fa-solid fa-calendar-check text-lg"></i>
+                <span class="text-xs mt-1">Agendamentos</span>
+            </span>
+            <span class="flex flex-col items-center py-2 px-3 text-gray-500 cursor-pointer">
+                <i class="fa-solid fa-chart-line text-lg"></i>
+                <span class="text-xs mt-1">Métricas</span>
+            </span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content" class="pt-16 pb-20 px-4">
+        <!-- Search Bar -->
+        <div id="search-section" class="my-4">
+            <div class="relative">
+                <input type="text" placeholder="Buscar paciente" class="w-full px-4 py-3 pl-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div id="filters-section" class="mb-4 flex gap-2 overflow-x-auto py-1">
+            <button class="px-3 py-1.5 bg-primary text-white rounded-full text-sm whitespace-nowrap" onclick="filterPatients('all')">
+                Todos
+            </button>
+            <button class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm whitespace-nowrap" onclick="filterPatients('pending')">
+                Pendentes
+            </button>
+            <button class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm whitespace-nowrap" onclick="filterPatients('authorized')">
+                Autorizados
+            </button>
+            <button class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm whitespace-nowrap" onclick="filterPatients('scheduled')">
+                Agendados
+            </button>
+        </div>
+
+        <!-- Pacientes Section -->
+        <section id="pacientes-section">
+            <h2 class="text-lg font-medium mb-3" id="section-title">Pacientes com exames solicitados</h2>
+            
+            <!-- Patient Card 1 - Ana Silva (Convênio cadastrado) -->
+            <div id="patient-card-1" class="bg-white rounded-xl shadow-sm mb-4 overflow-hidden" data-status="pending" data-has-insurance="true">
+                <div class="p-4 border-b border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-medium">Ana Silva</h3>
+                            <p class="text-sm text-gray-500">Dr. Roberto Campos</p>
+                            <p class="text-xs text-primary mt-1"><i class="fas fa-id-card"></i> Unimed - Matrícula: 789456</p>
+                        </div>
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium status-badge">Pendente</span>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h4 class="text-sm font-medium mb-2">Exames solicitados:</h4>
+                    <ul class="space-y-2 mb-3">
+                        <li class="flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-flask-vial text-primary"></i>
+                            <span>Hemograma Completo</span>
+                        </li>
+                        <li class="flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-x-ray text-primary"></i>
+                            <span>Raio-X Tórax</span>
+                        </li>
+                    </ul>
+                    <div class="flex gap-2 mt-3 action-buttons">
+                        <button class="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium" onclick="directSchedule('patient-card-1')">
+                            Agendar
+                        </button>
+                        <button class="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-medium" onclick="showAuthorizationModal('patient-card-1')">
+                            Autorizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Patient Card 2 - Carlos Mendes (Particular) -->
+            <div id="patient-card-2" class="bg-white rounded-xl shadow-sm mb-4 overflow-hidden" data-status="pending" data-has-insurance="false">
+                <div class="p-4 border-b border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-medium">Carlos Mendes</h3>
+                            <p class="text-sm text-gray-500">Dra. Juliana Freitas</p>
+                            <p class="text-xs text-red-500 mt-1"><i class="fas fa-user"></i> Particular</p>
+                        </div>
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium status-badge">Pendente</span>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h4 class="text-sm font-medium mb-2">Exames solicitados:</h4>
+                    <ul class="space-y-2 mb-3">
+                        <li class="flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-heart-pulse text-primary"></i>
+                            <span>Eletrocardiograma</span>
+                        </li>
+                    </ul>
+                    <div class="flex gap-2 mt-3 action-buttons">
+                        <button class="w-full py-2 bg-secondary text-white rounded-lg text-sm font-medium" onclick="directSchedule('patient-card-2')">
+                            Agendar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Patient Card 3 - Marta Oliveira (Agendado) -->
+            <div id="patient-card-3" class="bg-white rounded-xl shadow-sm mb-4 overflow-hidden" data-status="scheduled">
+                <div class="p-4 border-b border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-medium">Marta Oliveira</h3>
+                            <p class="text-sm text-gray-500">Dr. Paulo Santos</p>
+                            <p class="text-xs text-primary mt-1"><i class="fas fa-id-card"></i> Amil - Matrícula: 654321</p>
+                        </div>
+                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium status-badge">Agendado</span>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h4 class="text-sm font-medium mb-2">Exames solicitados:</h4>
+                    <ul class="space-y-2 mb-3">
+                        <li class="flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-stethoscope text-primary"></i>
+                            <span>Ultrassonografia Abdominal</span>
+                        </li>
+                    </ul>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <div class="flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-calendar-day text-secondary"></i>
+                            <span class="scheduled-date">15/08/2023 às 14:30</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-3 action-buttons">
+                        <button class="flex-1 py-2 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium">
+                            Ver detalhes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Authorization Modal -->
+    <div id="authorization-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl w-[90%] max-w-md overflow-hidden">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="font-medium text-lg">Autorização de Exames</h3>
+                <button onclick="document.getElementById('authorization-modal').classList.add('hidden')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="auth-form" class="p-4">
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium mb-2">Paciente:</h4>
+                    <p class="font-medium" id="auth-patient-name">Ana Silva</p>
+                    <p class="text-sm text-gray-500" id="auth-patient-info">Unimed - Matrícula: 789456</p>
+                </div>
+                
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium mb-2">Exames solicitados:</h4>
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <table class="w-full text-sm" id="auth-exams-table">
+                            <!-- Preenchido dinamicamente -->
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="flex gap-2 mt-6">
+                    <button class="flex-1 py-2.5 border border-gray-200 text-gray-700 rounded-lg" onclick="document.getElementById('authorization-modal').classList.add('hidden')">
+                        Cancelar
+                    </button>
+                    <button class="flex-1 py-2.5 bg-primary text-white rounded-lg font-medium" onclick="submitAuthorization()">
+                        Autorizar
+                    </button>
+                </div>
+            </div>
+            
+            <div id="auth-loading" class="p-6 flex flex-col items-center justify-center hidden">
+                <div class="w-16 h-16 mb-4 flex items-center justify-center">
+                    <i class="fas fa-circle-notch text-3xl text-primary rotate"></i>
+                </div>
+                <h4 class="font-medium text-lg mb-1">Enviando para o convênio</h4>
+                <p class="text-gray-500 text-center">Aguarde enquanto processamos sua solicitação...</p>
+            </div>
+            
+            <div id="auth-success" class="p-6 flex flex-col items-center justify-center hidden">
+                <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                    <i class="fas fa-check text-2xl text-green-500"></i>
+                </div>
+                <h4 class="font-medium text-lg mb-1">Procedimentos autorizados!</h4>
+                <p class="text-gray-500 text-center mb-4">Os exames foram autorizados pelo convênio.</p>
+                
+                <div class="bg-gray-50 p-4 rounded-lg w-full mb-4">
+                    <div class="flex items-center gap-3 mb-2">
+                        <i class="fas fa-file-alt text-primary"></i>
+                        <div>
+                            <p class="text-sm text-gray-500">Número da autorização</p>
+                            <p class="font-medium">AUT-2023-789456</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-calendar-day text-primary"></i>
+                        <div>
+                            <p class="text-sm text-gray-500">Validade</p>
+                            <p class="font-medium">30/08/2023</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="w-full py-2.5 bg-primary text-white rounded-lg font-medium" onclick="completeAuthorization()">
+                    Agendar Exames
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scheduling Modal -->
+    <div id="scheduling-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl w-[90%] max-w-md overflow-hidden">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="font-medium text-lg">Agendar Exame</h3>
+                <button onclick="document.getElementById('scheduling-modal').classList.add('hidden')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium mb-2">Paciente:</h4>
+                    <p id="scheduling-patient-name">Carlos Mendes</p>
+                </div>
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium mb-2">Exame:</h4>
+                    <p id="scheduling-exam-name">Eletrocardiograma</p>
+                </div>
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium mb-2">Selecione uma data:</h4>
+                    <div class="grid grid-cols-7 gap-1 mb-3">
+                        <div class="text-center text-xs text-gray-500 py-1">Dom</div>
+                        <div class="text-center text-xs text-gray-500 py-1">Seg</div>
+                        <div class="text-center text-xs text-gray-500 py-1">Ter</div>
+                        <div class="text-center text-xs text-gray-500 py-1">Qua</div>
+                        <div class="text-center text-xs text-gray-500 py-1">Qui</div>
+                        <div class="text-center text-xs text-gray-500 py-1">Sex</div>
+                        <div class="text-center text-xs text-gray-500 py-1">Sáb</div>
+                        
+                        <div class="text-center text-gray-400 py-2">30</div>
+                        <div class="text-center text-gray-400 py-2">31</div>
+                        <div class="text-center py-2">1</div>
+                        <div class="text-center py-2">2</div>
+                        <div class="text-center py-2">3</div>
+                        <div class="text-center py-2">4</div>
+                        <div class="text-center py-2">5</div>
+                        
+                        <div class="text-center py-2">6</div>
+                        <div class="text-center py-2">7</div>
+                        <div class="text-center py-2">8</div>
+                        <div class="text-center py-2">9</div>
+                        <div class="text-center py-2">10</div>
+                        <div class="text-center py-2">11</div>
+                        <div class="text-center py-2">12</div>
+                        
+                        <div class="text-center py-2">13</div>
+                        <div class="text-center py-2">14</div>
+                        <div class="text-center py-2 bg-primary text-white rounded-full selected-date">15</div>
+                        <div class="text-center py-2">16</div>
+                        <div class="text-center py-2">17</div>
+                        <div class="text-center py-2">18</div>
+                        <div class="text-center py-2">19</div>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium mb-2">Horários disponíveis:</h4>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="py-2 border border-gray-200 rounded-lg text-sm time-slot">08:00</button>
+                        <button class="py-2 border border-gray-200 rounded-lg text-sm time-slot">09:30</button>
+                        <button class="py-2 border border-gray-200 rounded-lg text-sm time-slot">10:15</button>
+                        <button class="py-2 border border-gray-200 rounded-lg text-sm time-slot">11:00</button>
+                        <button class="py-2 bg-secondary text-white rounded-lg text-sm selected-time time-slot">14:30</button>
+                        <button class="py-2 border border-gray-200 rounded-lg text-sm time-slot">15:45</button>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button class="flex-1 py-2.5 border border-gray-200 text-gray-700 rounded-lg" onclick="document.getElementById('scheduling-modal').classList.add('hidden')">
+                        Voltar
+                    </button>
+                    <button class="flex-1 py-2.5 bg-primary text-white rounded-lg font-medium" onclick="confirmScheduling()">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl w-[90%] max-w-md overflow-hidden">
+            <div class="p-6 flex flex-col items-center">
+                <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-check text-2xl text-secondary"></i>
+                </div>
+                <h3 class="font-medium text-lg mb-2">Agendamento realizado com sucesso!</h3>
+                <p class="text-gray-500 text-center mb-4">O exame foi agendado conforme solicitado.</p>
+                
+                <div class="bg-gray-50 p-4 rounded-lg w-full mb-4">
+                    <div class="flex items-center gap-3 mb-2">
+                        <i class="fa-solid fa-user text-primary"></i>
+                        <div>
+                            <p class="text-sm text-gray-500">Paciente</p>
+                            <p class="font-medium" id="success-patient-name">Carlos Mendes</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <i class="fa-solid fa-stethoscope text-primary"></i>
+                        <div>
+                            <p class="text-sm text-gray-500">Exame</p>
+                            <p class="font-medium" id="success-exam-name">Eletrocardiograma</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-calendar-day text-primary"></i>
+                        <div>
+                            <p class="text-sm text-gray-500">Data e Hora</p>
+                            <p class="font-medium" id="success-date-time">15/08/2023 às 14:30</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 w-full">
+                    <button class="flex-1 py-2.5 border border-gray-200 text-gray-700 rounded-lg flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Imprimir</span>
+                    </button>
+                    <button class="flex-1 py-2.5 bg-green-500 text-white rounded-lg flex justify-center items-center gap-2">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <span>Enviar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variável para controlar qual paciente está sendo processado
+        let currentProcessingPatient = null;
+
+        // Função para filtrar pacientes por status
+        function filterPatients(status) {
+            const patients = document.querySelectorAll('[id^="patient-card-"]');
+            let title = 'Pacientes com exames solicitados';
+            
+            patients.forEach(patient => {
+                const patientStatus = patient.getAttribute('data-status');
+                
+                if (status === 'all' || patientStatus === status) {
+                    patient.style.display = 'block';
+                } else {
+                    patient.style.display = 'none';
+                }
+            });
+            
+            // Atualizar título da seção
+            if (status === 'authorized') {
+                title = 'Pacientes autorizados';
+            } else if (status === 'scheduled') {
+                title = 'Pacientes agendados';
+            } else if (status === 'pending') {
+                title = 'Pacientes pendentes';
+            }
+            
+            document.getElementById('section-title').textContent = title;
+            
+            // Atualizar navegação inferior
+            updateBottomNav(status);
+        }
+        
+        // Função para atualizar a navegação inferior
+        function updateBottomNav(activeTab) {
+            const navItems = document.querySelectorAll('#bottom-nav span');
+            navItems.forEach(item => {
+                item.classList.remove('text-primary');
+                item.classList.add('text-gray-500');
+            });
+            
+            if (activeTab === 'all' || activeTab === 'pending') {
+                navItems[0].classList.add('text-primary');
+                navItems[0].classList.remove('text-gray-500');
+            } else if (activeTab === 'authorized') {
+                navItems[1].classList.add('text-primary');
+                navItems[1].classList.remove('text-gray-500');
+            } else if (activeTab === 'scheduled') {
+                navItems[2].classList.add('text-primary');
+                navItems[2].classList.remove('text-gray-500');
+            }
+        }
+        
+        // Mostrar modal de autorização (versão simplificada para convênio cadastrado)
+        function showAuthorizationModal(patientId) {
+            currentProcessingPatient = patientId;
+            const patientCard = document.getElementById(patientId);
+            
+            // Preencher informações no modal
+            document.getElementById('auth-patient-name').textContent = patientCard.querySelector('h3').textContent;
+            document.getElementById('auth-patient-info').textContent = patientCard.querySelector('p.text-xs.text-primary').textContent;
+            
+            // Preencher tabela de exames
+            const examsTable = document.getElementById('auth-exams-table');
+            examsTable.innerHTML = `
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2 text-left">Exame</th>
+                        <th class="px-3 py-2 text-left">Código TUSS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-t border-gray-200">
+                        <td class="px-3 py-2">Hemograma Completo</td>
+                        <td class="px-3 py-2 text-gray-500">40301583</td>
+                    </tr>
+                    <tr class="border-t border-gray-200">
+                        <td class="px-3 py-2">Raio-X Tórax</td>
+                        <td class="px-3 py-2 text-gray-500">40801234</td>
+                    </tr>
+                </tbody>
+            `;
+            
+            // Abrir modal
+            document.getElementById('authorization-modal').classList.remove('hidden');
+        }
+
+        // Agendamento direto (sem autorização)
+        function directSchedule(patientId) {
+            currentProcessingPatient = patientId;
+            const patientCard = document.getElementById(patientId);
+            
+            // Preencher informações no modal de agendamento
+            document.getElementById('scheduling-patient-name').textContent = patientCard.querySelector('h3').textContent;
+            
+            // Pegar o primeiro exame da lista
+            const examName = patientCard.querySelector('li span').textContent;
+            document.getElementById('scheduling-exam-name').textContent = examName;
+            
+            // Se for particular, mostrar observação
+            if (patientCard.getAttribute('data-has-insurance') === 'false') {
+                document.getElementById('scheduling-exam-name').innerHTML += 
+                    '<span class="text-xs text-red-500 block mt-1">(Pagamento particular)</span>';
+            }
+            
+            // Abrir modal
+            document.getElementById('scheduling-modal').classList.remove('hidden');
+        }
+
+        // Função para simular o envio da autorização
+        function submitAuthorization() {
+            // Mostra o loading
+            document.getElementById('auth-form').classList.add('hidden');
+            document.getElementById('auth-loading').classList.remove('hidden');
+            
+            // Simula o tempo de resposta do webservice (3 segundos)
+            setTimeout(function() {
+                document.getElementById('auth-loading').classList.add('hidden');
+                document.getElementById('auth-success').classList.remove('hidden');
+            }, 3000);
+        }
+        
+        // Função para completar a autorização e atualizar o card do paciente
+        function completeAuthorization() {
+            // Fechar modal de autorização
+            document.getElementById('authorization-modal').classList.add('hidden');
+            
+            if (currentProcessingPatient) {
+                // Atualizar o status do paciente para "Autorizado"
+                const patientCard = document.getElementById(currentProcessingPatient);
+                patientCard.setAttribute('data-status', 'authorized');
+                
+                // Atualizar o badge
+                const badge = patientCard.querySelector('.status-badge');
+                badge.textContent = 'Autorizado';
+                badge.classList.remove('bg-yellow-100', 'text-yellow-800');
+                badge.classList.add('bg-green-100', 'text-green-800');
+                
+                // Atualizar os botões de ação
+                const actionButtons = patientCard.querySelector('.action-buttons');
+                actionButtons.innerHTML = `
+                    <button class="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium" onclick="directSchedule('${currentProcessingPatient}')">
+                        Agendar
+                    </button>
+                    <button class="flex-1 py-2 border border-primary text-primary rounded-lg text-sm font-medium" onclick="showAuthorizationModal('${currentProcessingPatient}')">
+                        Ver Autorização
+                    </button>
+                `;
+            }
+            
+            // Resetar o modal
+            document.getElementById('auth-form').classList.remove('hidden');
+            document.getElementById('auth-loading').classList.add('hidden');
+            document.getElementById('auth-success').classList.add('hidden');
+            
+            // Atualizar filtros
+            filterPatients('authorized');
+        }
+
+        // Função para confirmar o agendamento
+        function confirmScheduling() {
+            if (!currentProcessingPatient) return;
+            
+            const patientCard = document.getElementById(currentProcessingPatient);
+            const selectedDate = document.querySelector('.selected-date').textContent;
+            const selectedTime = document.querySelector('.selected-time').textContent;
+            const dateTime = selectedDate + '/08/2023 às ' + selectedTime;
+            
+            // Atualizar o status do paciente para "Agendado"
+            patientCard.setAttribute('data-status', 'scheduled');
+            
+            // Atualizar o badge
+            const badge = patientCard.querySelector('.status-badge');
+            badge.textContent = 'Agendado';
+            badge.classList.remove('bg-yellow-100', 'text-yellow-800', 'bg-green-100', 'text-green-800');
+            badge.classList.add('bg-blue-100', 'text-blue-800');
+            
+            // Atualizar a data agendada
+            const examList = patientCard.querySelector('ul');
+            let dateDiv = patientCard.querySelector('.bg-gray-50');
+            
+            if (!dateDiv) {
+                dateDiv = document.createElement('div');
+                dateDiv.className = 'bg-gray-50 p-3 rounded-lg mt-3';
+                examList.parentNode.insertBefore(dateDiv, examList.nextSibling);
+            }
+            
+            dateDiv.innerHTML = `
+                <div class="flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-calendar-day text-secondary"></i>
+                    <span class="scheduled-date">${dateTime}</span>
+                </div>
+            `;
+            
+            // Atualizar os botões de ação
+            const actionButtons = patientCard.querySelector('.action-buttons');
+            actionButtons.innerHTML = `
+                <button class="w-full py-2 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium">
+                    Ver detalhes
+                </button>
+            `;
+            
+            // Preencher modal de sucesso
+            document.getElementById('success-patient-name').textContent = patientCard.querySelector('h3').textContent;
+            document.getElementById('success-exam-name').textContent = patientCard.querySelector('li span').textContent;
+            document.getElementById('success-date-time').textContent = dateTime;
+            
+            // Fechar modal de agendamento e abrir modal de sucesso
+            document.getElementById('scheduling-modal').classList.add('hidden');
+            document.getElementById('success-modal').classList.remove('hidden');
+            
+            // Atualizar filtros para mostrar o paciente na aba correta
+            filterPatients('scheduled');
+        }
+        
+        // Fechar modais ao clicar fora delas
+        document.querySelectorAll('[id$="-modal"]').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                    // Resetar o modal de autorização para o estado inicial
+                    if (this.id === 'authorization-modal') {
+                        document.getElementById('auth-form').classList.remove('hidden');
+                        document.getElementById('auth-loading').classList.add('hidden');
+                        document.getElementById('auth-success').classList.add('hidden');
+                    }
+                }
+            });
+        });
+        
+        // Fechar modais com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('[id$="-modal"]').forEach(modal => {
+                    modal.classList.add('hidden');
+                    // Resetar o modal de autorização para o estado inicial
+                    if (modal.id === 'authorization-modal') {
+                        document.getElementById('auth-form').classList.remove('hidden');
+                        document.getElementById('auth-loading').classList.add('hidden');
+                        document.getElementById('auth-success').classList.add('hidden');
+                    }
+                });
+            }
+        });
+        
+        // Selecionar horário no modal de agendamento
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('time-slot')) {
+                document.querySelectorAll('.time-slot').forEach(slot => {
+                    slot.classList.remove('bg-secondary', 'text-white');
+                    slot.classList.add('border', 'border-gray-200');
+                });
+                
+                e.target.classList.add('bg-secondary', 'text-white');
+                e.target.classList.remove('border', 'border-gray-200');
+            }
+        });
+        
+        // Inicializar mostrando todos os pacientes
+        filterPatients('all');
+    </script>
+</body>
+</html>
