@@ -127,16 +127,16 @@
 
         <!-- Filters -->
         <div id="filters-section" class="mb-4 flex gap-2 overflow-x-auto py-1">
-            <button class="px-3 py-1.5 bg-primary text-white rounded-full text-sm whitespace-nowrap" onclick="filterPatients('all')">
+            <button id="filter-all" class="px-3 py-1.5 bg-primary text-white rounded-full text-sm whitespace-nowrap" onclick="filterPatients('all')">
                 Todos
             </button>
-            <button class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm whitespace-nowrap" onclick="filterPatients('pending')">
+            <button id="filter-pending" class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm whitespace-nowrap" onclick="filterPatients('pending')">
                 Pendentes
             </button>
-            <button class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm whitespace-nowrap" onclick="filterPatients('authorized')">
+            <button id="filter-authorized" class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm whitespace-nowrap" onclick="filterPatients('authorized')">
                 Autorizados
             </button>
-            <button class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm whitespace-nowrap" onclick="filterPatients('scheduled')">
+            <button id="filter-scheduled" class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm whitespace-nowrap" onclick="filterPatients('scheduled')">
                 Agendados
             </button>
         </div>
@@ -265,7 +265,22 @@
                     <h4 class="text-sm font-medium mb-2">Exames solicitados:</h4>
                     <div class="border border-gray-200 rounded-lg overflow-hidden">
                         <table class="w-full text-sm" id="auth-exams-table">
-                            <!-- Preenchido dinamicamente -->
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">Exame</th>
+                                    <th class="px-3 py-2 text-left">Código TUSS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t border-gray-200">
+                                    <td class="px-3 py-2">Hemograma Completo</td>
+                                    <td class="px-3 py-2 text-gray-500">40301583</td>
+                                </tr>
+                                <tr class="border-t border-gray-200">
+                                    <td class="px-3 py-2">Raio-X Tórax</td>
+                                    <td class="px-3 py-2 text-gray-500">40801234</td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -448,8 +463,33 @@
         // Variável para controlar qual paciente está sendo processado
         let currentProcessingPatient = null;
 
+        // Função para atualizar os botões de filtro
+        function updateFilterButtons(activeFilter) {
+            const filters = {
+                'all': document.getElementById('filter-all'),
+                'pending': document.getElementById('filter-pending'),
+                'authorized': document.getElementById('filter-authorized'),
+                'scheduled': document.getElementById('filter-scheduled')
+            };
+
+            // Resetar todos os botões
+            Object.values(filters).forEach(button => {
+                button.classList.remove('bg-primary', 'text-white');
+                button.classList.add('bg-white', 'border', 'border-gray-200', 'text-gray-600');
+            });
+
+            // Ativar o filtro selecionado
+            if (filters[activeFilter]) {
+                filters[activeFilter].classList.remove('bg-white', 'border', 'border-gray-200', 'text-gray-600');
+                filters[activeFilter].classList.add('bg-primary', 'text-white');
+            }
+        }
+
         // Função para filtrar pacientes por status
         function filterPatients(status) {
+            // Atualizar botões de filtro
+            updateFilterButtons(status);
+            
             const patients = document.querySelectorAll('[id^="patient-card-"]');
             let title = 'Pacientes com exames solicitados';
             
@@ -484,17 +524,28 @@
             navItems.forEach(item => {
                 item.classList.remove('text-primary');
                 item.classList.add('text-gray-500');
+                item.querySelector('i').classList.remove('text-primary');
+                item.querySelector('i').classList.add('text-gray-500');
             });
             
             if (activeTab === 'all' || activeTab === 'pending') {
-                navItems[0].classList.add('text-primary');
-                navItems[0].classList.remove('text-gray-500');
+                const firstNavItem = navItems[0];
+                firstNavItem.classList.remove('text-gray-500');
+                firstNavItem.classList.add('text-primary');
+                firstNavItem.querySelector('i').classList.remove('text-gray-500');
+                firstNavItem.querySelector('i').classList.add('text-primary');
             } else if (activeTab === 'authorized') {
-                navItems[1].classList.add('text-primary');
-                navItems[1].classList.remove('text-gray-500');
+                const secondNavItem = navItems[1];
+                secondNavItem.classList.remove('text-gray-500');
+                secondNavItem.classList.add('text-primary');
+                secondNavItem.querySelector('i').classList.remove('text-gray-500');
+                secondNavItem.querySelector('i').classList.add('text-primary');
             } else if (activeTab === 'scheduled') {
-                navItems[2].classList.add('text-primary');
-                navItems[2].classList.remove('text-gray-500');
+                const thirdNavItem = navItems[2];
+                thirdNavItem.classList.remove('text-gray-500');
+                thirdNavItem.classList.add('text-primary');
+                thirdNavItem.querySelector('i').classList.remove('text-gray-500');
+                thirdNavItem.querySelector('i').classList.add('text-primary');
             }
         }
         
